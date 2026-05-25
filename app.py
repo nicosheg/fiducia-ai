@@ -2,11 +2,36 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 from groq import Groq
+import random
 
 app = Flask(__name__)
 CORS(app)
 
-client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+# Load all GROQ keys
+GROQ_KEYS = [
+    os.getenv('GROQ_KEY_1'),
+    os.getenv('GROQ_KEY_2'),
+    os.getenv('GROQ_KEY_3'),
+]
+GROQ_KEYS = [k for k in GROQ_KEYS if k]  # Remove None values
+
+if not GROQ_KEYS:
+    raise ValueError("No GROQ keys found! Add GROQ_KEY_1, GROQ_KEY_2, GROQ_KEY_3")
+
+# ... rest of code ...
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        message = data.get('message', '')
+        user_id = data.get('user_id', 'unknown')
+        
+        # Use random key (load balancing)
+        api_key = random.choice(GROQ_KEYS)
+        client = Groq(api_key=api_key)
+        
+        # ... rest of chat logic ...
 
 # Compressed system prompt
 SP = """You are FIDUCIA AI - Nigerian student coach (exam + money + growth)
