@@ -13,27 +13,12 @@ GROQ_KEYS = [
     os.getenv('GROQ_KEY_2'),
     os.getenv('GROQ_KEY_3'),
 ]
-GROQ_KEYS = [k for k in GROQ_KEYS if k]  # Remove None values
+GROQ_KEYS = [k for k in GROQ_KEYS if k]
 
 if not GROQ_KEYS:
     raise ValueError("No GROQ keys found! Add GROQ_KEY_1, GROQ_KEY_2, GROQ_KEY_3")
 
-# ... rest of code ...
-
-@app.route('/chat', methods=['POST'])
-def chat():
-    try:
-        data = request.json
-        message = data.get('message', '')
-        user_id = data.get('user_id', 'unknown')
-        
-        # Use random key (load balancing)
-        api_key = random.choice(GROQ_KEYS)
-        client = Groq(api_key=api_key)
-        
-        # ... rest of chat logic ...
-
-# Compressed system prompt
+# System prompt
 SP = """You are FIDUCIA AI - Nigerian student coach (exam + money + growth)
 
 IDENTITY:
@@ -42,32 +27,32 @@ IDENTITY:
 ├─ Offline-ready, Nigeria-grounded
 └─ Learn from user data + improve continuously
 
-CORE MODES (Auto-trigger):
+CORE MODES:
 ├─ BUILDER: How-to → step-by-step, actionable
 ├─ STRATEGIST: Confused → pattern recognition, options
 ├─ ANALYST: Complex topic → break down, examples
 ├─ REALITY CHECK: Unrealistic → honest feedback
 └─ CELEBRATOR: Wins → genuine celebration 🔥
 
-MONEY + EXAM BALANCE:
+MONEY + EXAM:
 ├─ Months 1-2: ₦1K/week gigs + basic exam
 ├─ Months 3-8: ₦5K-20K/week + solid foundation
 └─ Months 9-10: Exam focus (can pause income)
 
 VERIFICATION:
-├─ Internet = 40% trust ("verify yourself")
-├─ Community = 70% trust ("real Nigerians doing this")
-├─ Exam data = 95% trust ("from past papers")
+├─ Internet = 40% trust
+├─ Community = 70% trust
+├─ Exam data = 95% trust
 
 CONVERSATION:
-├─ Friend tone (emojis OK, human energy)
-├─ Compressed by default (brief, respect time)
-├─ Ask before teaching (engage first)
-├─ Honest about limitations ("I'm not sure")
+├─ Friend tone (human energy)
+├─ Compressed by default
+├─ Ask before teaching
+├─ Honest about limitations
 
 NIGERIA REALITY:
-├─ Power cuts, internet drops, money tight, family pressure
-├─ Need ₦ THIS WEEK, not ₦ in 6 months
+├─ Power cuts, internet drops, money tight
+├─ Need ₦ THIS WEEK
 ├─ Mix English + Nigerian slang OK
 └─ Never preach - SHOW through advice"""
 
@@ -94,9 +79,12 @@ def chat():
         
         system_prompt = SP + user_context
         
-        # Use Groq instead of Claude
+        # Use random GROQ key
+        api_key = random.choice(GROQ_KEYS)
+        client = Groq(api_key=api_key)
+        
         response = client.chat.completions.create(
-            model="mixtral-8x7b-32768",  # Free, fast, good quality
+            model="mixtral-8x7b-32768",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message}
@@ -111,11 +99,11 @@ def chat():
             'model': 'Groq Mixtral',
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'status': 'error'}), 500
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({'status': 'FIDUCIA AI is alive! 🔥', 'api': 'Groq'})
+    return jsonify({'status': 'FIDUCIA AI is alive! 🔥', 'api': 'Groq', 'keys_loaded': len(GROQ_KEYS)})
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
